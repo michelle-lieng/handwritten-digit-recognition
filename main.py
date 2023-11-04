@@ -56,11 +56,12 @@ model.add(Dropout(0.2))
 model.add(Dense(units=64, activation='relu'))
 model.add(Dropout(0.2))
 
-model.add(Dense(units=32, activation='relu'))
-model.add(Dropout(0.2))
+#model.add(Dense(units=32, activation='relu'))
+#model.add(Dropout(0.2))
 
 # 2 dense hidden layers with 128 units had loss: 0.07195307314395905 and accuracy: 0.9797999858856201
-# 2 dense hidden layers with 128 units, THEN 64 had loss: 0.0633239597082138 and accuracy: 0.9818999767303467
+# 2 dense hidden layers with 128 units, then 64 had loss: 0.07154695689678192 and accuracy: 0.980400025844574
+# 3 dense hidden layers with 128, 64, 32 had loss: 0.07737532258033752 and accuracy: 0.980400025844574
 
 #output layer
 # softmax makes a probability distribution so all add to 1 and biggest % you choose is the predicted class
@@ -86,6 +87,21 @@ model.fit(x=X_train,
 # saved_model = load_model("handwritten_digits.model")
 
 # EVALUATE MODEL ON TEST DATA ------------------------------------------------------------------------------------
+# 1) plot training vs test losses 
+losses = pd.DataFrame(model.history.history)[["loss", "val_loss"]]
+losses.plot()
+plt.show()
+
+# 2) get confusion matrix and classification report 
+from sklearn.metrics import classification_report, confusion_matrix
+predictions = np.argmax(model.predict(X_test), axis =1) #find the max in each row
+predictions
+
+print(classification_report(y_test, predictions))
+print("\n")
+print(confusion_matrix(y_test,predictions))
+
+# 3) get loss and accuracy
 loss, accuracy = model.evaluate(X_test, y_test)
 
 print(loss) # want low
@@ -93,7 +109,7 @@ print(accuracy) # want high to 1 as possible
 
 # EVALUATE MODEL ON OWN DRAWN DATA -------------------------------------------------------------------------------
 # loading and processing a single image
-trial = cv2.imread(f"digits-3px-line/10.png")[:,:,0] #load image in grayscale mode - shape (28,28)
+trial = cv2.imread(f"digits/10.png")[:,:,0] #load image in grayscale mode - shape (28,28)
 trial = np.invert(np.array([trial])) #inverts pixel value of the image array
 # the np.array([]) around trial changes the shape to (1,28,28) so we have 1 sample of the image shape (28,28) to run our model on
 trial = normalize(trial, axis=1)
@@ -106,8 +122,8 @@ plt.show()
 # looping through multiple images
 predicted_data=[]
 image_number = 0
-while os.path.isfile(f"digits-3px-line/{image_number}.png"):
-    img = cv2.imread(f"digits-3px-line/{image_number}.png")[:,:,0]
+while os.path.isfile(f"digits/{image_number}.png"):
+    img = cv2.imread(f"digits/{image_number}.png")[:,:,0]
     img = np.invert(np.array([img]))
     img = normalize(img, axis = 1)
     prediction = model.predict(img)
@@ -115,7 +131,7 @@ while os.path.isfile(f"digits-3px-line/{image_number}.png"):
     # show graph of true value with predicted result
     plt.imshow(img[0], cmap="gray") #can also make cmap=plt.cm.binary
     plt.title(f"Label: {np.argmax(prediction)}")
-    # plt.show()
+    plt.show()
     
     # get list of predicted value
     predicted_data.append(np.argmax(prediction))
